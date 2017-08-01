@@ -1,0 +1,105 @@
+package view;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.LayoutManager;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JPanel;
+
+public class TetrisBoard extends JPanel implements Observer {
+
+    //** Generated serial ID. */
+    private static final long serialVersionUID = -3767922601693505266L;
+    
+    
+    private static final int FIVE = 5;
+    private static final double BOARD_WIDTH = 10.0;
+    private static final int LENGTH = 600;
+    private static final double BOARD_HEIGHT = 20.0;
+    
+    /** Tetris board text. */
+    private String[] myBlocks;
+    
+    private TetrisGUI myBoard;
+    
+
+    public TetrisBoard() {
+        super();
+        myBlocks = new String[0];
+    }
+
+    @Override
+    public void paintComponent(final Graphics theGraphics) {
+        super.paintComponent(theGraphics);
+        final Graphics2D g2d = (Graphics2D) theGraphics;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                             RenderingHints.VALUE_ANTIALIAS_ON);
+        drawBoard(g2d);
+    }
+    
+    /**
+     * This method draws the board.
+     * @param theG2d the graphics of the panel
+     */
+    private void drawBoard(final Graphics2D theG2d) {
+        int y = 0;
+        for (int i = FIVE; i < myBlocks.length - 1; i++) {
+            int x = 0;
+            final String temp = myBlocks[i];
+            for (int j = 1; j < temp.length() - 1; j++) {
+                final Shape block = new Rectangle2D.Double(x * 1.0, y * 1.0, 
+                                        WIDTH / BOARD_WIDTH, LENGTH / BOARD_HEIGHT);
+                theG2d.draw(block);
+                theG2d.setPaint(getColor(temp.charAt(j)));
+                theG2d.fill(block);
+            
+                x += WIDTH / (int) BOARD_WIDTH;
+            }
+            y += LENGTH / (int) BOARD_HEIGHT;
+        }
+        
+    }
+    /**
+     * This method returns the color of each block.
+     * @param theChar the block type identifier
+     * @return the block color
+     */
+    private Color getColor(final char theChar) {
+        Color result = null;
+        if (theChar == 'I') {
+            result = Color.YELLOW;
+        } else if (theChar == 'J') {
+            result = Color.CYAN;
+        } else if (theChar == 'L') {
+            result = Color.GREEN;
+        } else if (theChar == '0') {
+            result = Color.BLUE;
+        } else if (theChar == 'S') {
+            result = Color.ORANGE;
+        } else if (theChar == 'T') {
+            result = Color.PINK;
+        } else if (theChar == 'Z') {
+            result = Color.RED;
+        } else {
+            result = Color.WHITE;
+        }
+        return result;
+    }
+    
+
+    @Override
+    public void update(final Observable theBoard, final Object theBlocks) {
+//        System.out.println(theBoard);
+        if (theBlocks instanceof String) {
+            myBlocks = theBlocks.toString().split("\n");
+            //myPanel.setBlocks(theBlocks.toString().split("\n"));
+            repaint();
+        }
+    }
+}

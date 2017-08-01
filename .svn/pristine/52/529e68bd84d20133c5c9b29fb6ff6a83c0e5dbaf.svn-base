@@ -1,0 +1,221 @@
+/**
+ * TCSS 305 - SPRING 2016
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.geom.Rectangle2D;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+
+/**
+ * This class contains the implementation of the tetris GUI.
+ * @author John Chang
+ * @version 24 May 2016
+ */
+public class TetrisGUI extends JFrame {
+
+    /** Generated serial version ID. */
+    private static final long serialVersionUID = 5950402688340088020L;
+    
+    /** The preferred window size. */
+    private static final int WIDTH = 300;
+    
+    /** The preferred winder size. */
+    private static final int LENGTH = 600;
+
+    /** Where the board begins. */
+    private static final int FIVE = 5;
+    
+    /** The height of board. */
+    private static final double BOARD_HEIGHT = 20.0;
+    
+    /** The board width. */
+    private static final double BOARD_WIDTH = 10.0;
+    
+    /** The timer delay. */
+    private static final int TIMER_DELAY = 1000;
+    
+    /** Timer for the Tetris. */
+    private final Timer myTimer;
+    
+    /** Board object. */
+    private final Board myBoard;
+    
+    /** Tetris Panel. */
+    private final TetrisPanel myPanel;
+    
+    /** Tetris board text. */
+    private String[] myBlocks;
+  
+    /**
+     * Constructor of the TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("Tetris");
+        myTimer = new Timer(TIMER_DELAY, new TimerActionListener());
+        myBoard = new Board();
+        myPanel = new TetrisPanel();
+        myBlocks = new String[0];
+    }
+    
+    /**
+     * Begins the Tetris GUI.
+     */
+    public void start() {
+        setLayout(new BorderLayout());
+        myPanel.setBackground(Color.WHITE);
+        myPanel.setPreferredSize(new Dimension(WIDTH + 1, LENGTH));
+        add(myPanel, BorderLayout.WEST);
+
+        addKeyListener(new TetrisKeyListener());
+        myBoard.addObserver(new Observer() {
+
+            @Override
+            public void update(final Observable theBoard, final Object theBlocks) {
+                System.out.print(theBoard);
+                if (theBlocks instanceof String) {
+                    myBlocks = theBlocks.toString().split("\n");
+                    repaint();
+                    
+                
+                }
+                
+            }
+            
+        });
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        pack();
+        setVisible(true);
+        
+        myBoard.newGame();
+        myTimer.start();
+        
+        
+        
+    }
+    /**
+     * This method draws the board.
+     * @param theG2d the graphics of the panel
+     */
+    private void drawBoard(final Graphics2D theG2d) {
+        int y = 0;
+        for (int i = FIVE; i < myBlocks.length - 1; i++) {
+            int x = 0;
+            final String temp = myBlocks[i];
+            for (int j = 1; j < temp.length() - 1; j++) {
+                final Shape block = new Rectangle2D.Double(x * 1.0, y * 1.0, 
+                                        WIDTH / BOARD_WIDTH, LENGTH / BOARD_HEIGHT);
+                theG2d.draw(block);
+                theG2d.setPaint(getColor(temp.charAt(j)));
+                theG2d.fill(block);
+            
+                x += WIDTH / (int) BOARD_WIDTH;
+            }
+            y += LENGTH / (int) BOARD_HEIGHT;
+        }
+        
+    }
+    
+    /**
+     * This method returns the color of each block.
+     * @param theChar the block type identifier
+     * @return the block color
+     */
+    private Color getColor(final char theChar) {
+        Color result = null;
+        if (theChar == 'I') {
+            result = Color.YELLOW;
+        } else if (theChar == 'J') {
+            result = Color.CYAN;
+        } else if (theChar == 'L') {
+            result = Color.GREEN;
+        } else if (theChar == '0') {
+            result = Color.BLUE;
+        } else if (theChar == 'S') {
+            result = Color.ORANGE;
+        } else if (theChar == 'T') {
+            result = Color.PINK;
+        } else if (theChar == 'Z') {
+            result = Color.RED;
+        } else {
+            result = Color.WHITE;
+        }
+        return result;
+    }
+    
+    /**
+     * The speed of the board is dependent on this timer.
+     * @author John Chang
+     */
+    private class TimerActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            myBoard.step();
+            
+        }
+    }
+    
+    /**
+     * The panel the board is painted on.
+     * @author John Chang
+     */
+    private class TetrisPanel extends JPanel {
+        /**
+         * Generated serial version ID.
+         */
+        private static final long serialVersionUID = 691058644342210451L;
+
+        @Override 
+        public void paintComponent(final Graphics theGraphics) {
+            super.paintComponent(theGraphics);
+            final Graphics2D g2d = (Graphics2D) theGraphics;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                                 RenderingHints.VALUE_ANTIALIAS_ON);
+            drawBoard(g2d);
+            
+            
+        }
+    }
+    
+    /**
+     * Key listener moves tetris piece.
+     * @author John Chang
+     */
+    private class TetrisKeyListener extends KeyAdapter {
+        @Override
+        public void keyPressed(final KeyEvent theEvent) {
+            if (theEvent.getKeyCode() == KeyEvent.VK_Z) {
+                myBoard.rotateCCW();
+            } else if (theEvent.getKeyCode() == KeyEvent.VK_DOWN) {
+                myBoard.down();
+            } else if (theEvent.getKeyCode() == KeyEvent.VK_LEFT) {
+                myBoard.left();
+            } else if (theEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
+                myBoard.right();
+            } else if (theEvent.getKeyChar() == KeyEvent.VK_SPACE) {
+                myBoard.drop();
+            } else if (theEvent.getKeyCode() == KeyEvent.VK_X) {
+                myBoard.rotateCW();
+            }
+        }
+    }
+}
